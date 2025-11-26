@@ -1,0 +1,15 @@
+﻿@BG-Tec-HostAddress = https://localhost:7024
+
+###
+POST https://localhost:7024/check-in
+Accept: application/json
+Content-Type: application/json
+ {
+  "forename": "Jane",
+  "surname": "Doe",
+  "dob": "1992-01-01",
+  "documentNumber": "00000000000000",
+  "flightId": 1552
+ }
+
+ ###
