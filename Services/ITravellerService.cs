@@ -4,6 +4,8 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
 {
     public interface ITravellerService
     {
-        public Task<CheckinRequestResponse> CheckInTravellerAsync(CheckInRequest travellerCheckInRequest);
+        public Task<CheckinResponse> CheckInTravellerAsync(CheckInRequest travellerCheckInRequest);
+
+        public Task<GetTravellerByIdResponse> GetTravellerByIdAsync(int travellerId);
     }
 }

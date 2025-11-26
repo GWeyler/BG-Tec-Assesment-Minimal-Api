@@ -8,6 +8,9 @@ using BG_Tec_Assesment_Minimal_Api.Services;
 using BG_Tec_Assesment_Minimal_Api.Utils;
 using System.Reflection.Metadata.Ecma335;
 using Microsoft.AspNetCore.Http.HttpResults;
+using System.Data.Entity.Core.Mapping;
+using BG_Tec_Assesment_Minimal_Api.Models;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,8 +37,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.MapGet("/", () => "Hello World!");
-
 app.MapPost("/check-in", async ([FromBody] CheckInRequest request, ITravellerService travellerService) =>
 {
     var ret = await travellerService.CheckInTravellerAsync(request);
@@ -52,12 +53,26 @@ app.MapPost("/check-in", async ([FromBody] CheckInRequest request, ITravellerSer
         case ErrorEnum.DuplicateEntry:
             return Results.BadRequest(new { status = "Duplicate", reason = ret.Message });
         default:
-            return Results.StatusCode(500);
+            return Results.InternalServerError();
     }
 }
 );
 
-app.MapGet("/traveller/{id}", (int id) => "Traveller endpoint placeholder");
+app.MapGet("/traveller/{id}", async (int id, ITravellerService travellerService) =>
+{
+    var ret = await travellerService.GetTravellerByIdAsync(id);
+
+    switch (ret.ErrorCode)
+    {
+        case ErrorEnum.None:
+            return Results.Ok(ret.Traveller);
+        case ErrorEnum.NotFound:
+            return Results.NotFound();
+        default:
+            return Results.InternalServerError();
+    }
+
+});
 
 app.MapGet("/traveller/search", (
     [FromQuery] int? flightId,

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BG_Tec_Assesment_Minimal_Api.DTO
 {
-    public class CheckinRequestResponse
+    public class CheckinResponse
     {
         [Required]
         public ErrorEnum ErrorCode { get; set; }
