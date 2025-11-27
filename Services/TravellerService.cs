@@ -7,6 +7,7 @@ using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations;
 using System.Data.Entity.Core.Metadata.Edm;
 using System.Text.Json;
@@ -25,6 +26,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
 
         private readonly IGenericRepository<Traveller> _travellerRepository; 
 
+        private readonly string DATE_FORMAT = "yyyy-MM-dd"; 
         public TravellerService(ILogger<TravellerService> logger, IMapper mapper, IGenericRepository<Flight> flightRepository, IGenericRepository<Traveller> travellerRepository)
         {
             _logger = logger;
@@ -36,6 +38,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
 
         public async Task<CheckinResponse> CheckInTravellerAsync(CheckInRequest travellerCheckInRequest)
         {
+            _logger.LogInformation(" CheckInTravellerAsync called with {@travellerCheckInRequest}", travellerCheckInRequest);
             Flight? flight;
             try
             {
@@ -57,7 +60,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
 
             DateOnly tmpDob;
 
-            if (!DateOnly.TryParse(travellerCheckInRequest.Dob, out tmpDob))
+            if (!DateOnly.TryParseExact(travellerCheckInRequest.Dob, DATE_FORMAT, null, System.Globalization.DateTimeStyles.None, out tmpDob))
             {
                 _logger.LogError(" Traveller DoB could not be parsed returning BadRequest DoB: {@newCheckingRequest.Dob}", travellerCheckInRequest.Dob);
                 return new CheckinResponse { ErrorCode = ErrorEnum.BadRequest, Message = " Dob could not be parsed" };
@@ -138,6 +141,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
         }
         async public Task<GetTravellerByIdResponse> GetTravellerByIdAsync(int travellerId)
         {
+            _logger.LogInformation(" GetTravellerByIdAsync called with ID: {travellerId}", travellerId);
             Traveller traveller;
             try
             {
@@ -172,7 +176,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
 
             if (!string.IsNullOrEmpty(travellerSearchRequest.Dob_from))
             {
-                if (DateOnly.TryParse(travellerSearchRequest.Dob_from, out DateOnly dobFromDate))
+                if (DateOnly.TryParseExact(travellerSearchRequest.Dob_from,DATE_FORMAT,null,System.Globalization.DateTimeStyles.None, out DateOnly dobFromDate))
                 {
                     predicate = predicate.And(t => t.Dob >= dobFromDate);
                 }
@@ -188,7 +192,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
 
             if (!string.IsNullOrEmpty(travellerSearchRequest.Dob_to))
             {
-                if (DateOnly.TryParse(travellerSearchRequest.Dob_to, out DateOnly dobToDate))
+                if (DateOnly.TryParseExact(travellerSearchRequest.Dob_from, DATE_FORMAT, null, System.Globalization.DateTimeStyles.None, out DateOnly dobToDate))
                 {
                     predicate = predicate.And(t => t.Dob <= dobToDate);
                 }
@@ -216,7 +220,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
             return new TravellerSearchResponse
             {
                 ErrorCode = ErrorEnum.None,
-                Travellers = travellers.Select(t => t.Adapt<TravellerDTO>()).ToList()
+                Travellers = travellers.IsNullOrEmpty()?new List<TravellerDTO>(): travellers.Select(t => t.Adapt<TravellerDTO>()).ToList()
             };
 
         }
