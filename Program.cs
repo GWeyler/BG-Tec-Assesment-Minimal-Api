@@ -30,6 +30,10 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddScoped < ITravellerService, TravellerService >();
 
+builder.Services.AddScoped(typeof(IGenericRepository<Traveller>), typeof(TravellerRepository));
+
+builder.Services.AddScoped(typeof(IGenericRepository<Flight>), typeof(FlightRepository));
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -74,21 +78,33 @@ app.MapGet("/traveller/{id}", async (int id, ITravellerService travellerService)
 
 });
 
-app.MapGet("/traveller/search", (
+app.MapGet("/traveller/search", async  (
     [FromQuery] int? flightId,
     [FromQuery] string? name,
-    [FromQuery(Name = "Dob_to")] string? dobTo,
-    [FromQuery(Name = "Dob_from")] string? dobFrom
+    [FromQuery(Name = "dob-to")] string? dobTo,
+    [FromQuery(Name = "dob-from")] string? dobFrom,
+    ITravellerService travellerService
 ) =>
 {
-    var request = new TravellerQueryRequest
+    var request = new TravellerSearchRequest
     {
         FlightId = flightId,
         Name = name,
         Dob_to = dobTo,
         Dob_from = dobFrom
     };
-    return $" search endpoint {request}";
+
+    var ret = await travellerService.SearchTravellerAsync(request);
+
+    switch (ret.ErrorCode)
+    {
+        case ErrorEnum.None:
+            return Results.Ok(new { result = ret.Travellers });
+        case ErrorEnum.BadRequest:
+            return Results.BadRequest(ret.Messsage);
+        default:
+            return Results.InternalServerError();
+    }
 }
 );
 

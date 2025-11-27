@@ -1,5 +1,4 @@
-﻿@BG-Tec-Assesment-Minimal-Api_HostAddress = https://localhost:7024
-@BG-Tec-HostAddress = https://localhost:7024
+﻿@BG-Tec-HostAddress = https://localhost:7024
 
 ###
 POST https://localhost:7024/check-in
@@ -9,12 +8,16 @@ Content-Type: application/json
   "forename": "Jane",
   "surname": "Doe",
   "dob": "1992-01-01",
-  "documentNumber": "00000000000000",
+  "documentNumber": "zzzzzzzzzzzzzzzz",
   "flightId": 1552
  }
 
  ###
 @id=1
 GET https://localhost:7024/traveller/{{id}}
+
+###
+
+GET https://localhost:7024/traveller/search?name=J
 
 ###

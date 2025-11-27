@@ -7,5 +7,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
         public Task<CheckinResponse> CheckInTravellerAsync(CheckInRequest travellerCheckInRequest);
 
         public Task<GetTravellerByIdResponse> GetTravellerByIdAsync(int travellerId);
+
+        public Task<TravellerSearchResponse> SearchTravellerAsync(TravellerSearchRequest travellerSearchRequest);
     }
 }

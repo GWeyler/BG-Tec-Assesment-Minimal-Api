@@ -2,6 +2,8 @@
 using BG_Tec_Assesment_Minimal_Api.DTO;
 using BG_Tec_Assesment_Minimal_Api.Models;
 using BG_Tec_Assesment_Minimal_Api.Utils;
+using LinqKit;
+using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,22 +19,33 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
 
         private readonly ILogger<TravellerService> _logger;
 
-        private readonly TravellerAPIDbContext _context;
-
         private readonly IMapper _mapper;
 
-        public TravellerService(ILogger<TravellerService> logger, TravellerAPIDbContext context, IMapper mapper)
+        private readonly IGenericRepository<Flight> _flightRepository;
+
+        private readonly IGenericRepository<Traveller> _travellerRepository; 
+
+        public TravellerService(ILogger<TravellerService> logger, IMapper mapper, IGenericRepository<Flight> flightRepository, IGenericRepository<Traveller> travellerRepository)
         {
             _logger = logger;
-            _context = context;
             _mapper = mapper;
+            _flightRepository = flightRepository;
+            _travellerRepository = travellerRepository;
+
         }
 
         public async Task<CheckinResponse> CheckInTravellerAsync(CheckInRequest travellerCheckInRequest)
         {
-            Flight flight = await _context.Flights
-                .Include(f => f.Travellers)
-                .SingleOrDefaultAsync(f => f.Id == travellerCheckInRequest.FlightId);
+            Flight? flight;
+            try
+            {
+               flight = await _flightRepository.GetEntityAsync(f => f.Id == travellerCheckInRequest.FlightId);
+
+            }catch (Exception e)
+            {
+                _logger.LogError(" Issue retrieving data from DB {@e}", e);
+                return new CheckinResponse { ErrorCode = ErrorEnum.InternalServerError, Message = " Internal Server Error" };
+            }
 
             if (flight == null)
             {
@@ -71,7 +84,16 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
             }
 
             //Do we already have a passenger with that Document in the DB?
-            Traveller existingTraveller = await _context.Travellers.SingleOrDefaultAsync(t => t.DocumentNumberSHA == documentNumberSHA);
+            Traveller? existingTraveller;
+            try
+            {
+               existingTraveller  = await _travellerRepository.GetEntityAsync(t => t.DocumentNumberSHA == documentNumberSHA);
+
+            } catch (Exception e)
+            {
+                _logger.LogError(" Issue retrieving data from DB {@e}", e);
+                return new CheckinResponse { ErrorCode = ErrorEnum.InternalServerError, Message = " Internal Server Error" };
+            }
 
             if (existingTraveller != null)
             {
@@ -87,7 +109,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
                     try
                     {
                         flight.Travellers.Add(existingTraveller);
-                        await _context.SaveChangesAsync();
+                        await _flightRepository.SaveChangesAsync();
                         return new CheckinResponse { ErrorCode = ErrorEnum.None, TravellerId = existingTraveller.Id, Message = "Accepted" };
                     }
                     catch (Exception e)
@@ -101,15 +123,15 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
             try
             {
                 _logger.LogInformation("Adding new traveller {@t}", newTraveller);
-                var ret = await _context.Travellers.AddAsync(newTraveller);
-                flight.Travellers.Add(ret.Entity);
-                await _context.SaveChangesAsync();
-                return new CheckinResponse { ErrorCode = ErrorEnum.None, TravellerId = ret.Entity.Id, Message = "Accepted" };
+                var ret = await _travellerRepository.AddEntityAsync(newTraveller);
+                flight.Travellers.Add(ret);
+                await _flightRepository.SaveChangesAsync();
+                return new CheckinResponse { ErrorCode = ErrorEnum.None, TravellerId = ret.Id, Message = "Accepted" };
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                _logger.LogError("Error saving new traveller: {@ex}", ex);
-                return new CheckinResponse { ErrorCode = ErrorEnum.NotFound, Message = " No flight found that matches ID" };
+                _logger.LogError("Error saving new traveller: {@ex}", e);
+                return new CheckinResponse { ErrorCode = ErrorEnum.InternalServerError, Message = " Internal Server Error" };
 
             }
 
@@ -119,9 +141,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
             Traveller traveller;
             try
             {
-                traveller = await _context.Travellers
-                    .Include(t => t.Flights)
-                    .SingleOrDefaultAsync(t => t.Id == travellerId);
+                traveller = await _travellerRepository.GetEntityByIdAsync(travellerId); 
             }
             catch (Exception e)
             {
@@ -134,6 +154,71 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
                 ErrorCode = traveller == null ? ErrorEnum.NotFound : ErrorEnum.None,
                 Traveller = traveller == null ? null : _mapper.Map<TravellerDTO>(traveller)
             };
+        }
+        async public Task<TravellerSearchResponse> SearchTravellerAsync(TravellerSearchRequest travellerSearchRequest)
+        {
+            var predicate = PredicateBuilder.New<Traveller>();
+            _logger.LogInformation(" Doing stuff");
+
+            if (travellerSearchRequest.FlightId != null)
+            {
+                predicate = predicate.And(t => t.Flights.Any(f => f.Id == travellerSearchRequest.FlightId));
+            }
+
+            if (!string.IsNullOrEmpty(travellerSearchRequest.Name))
+            {
+                predicate = predicate.And(t => t.Forename.Contains(travellerSearchRequest.Name) || t.Surname.Contains(travellerSearchRequest.Name));
+            }
+
+            if (!string.IsNullOrEmpty(travellerSearchRequest.Dob_from))
+            {
+                if (DateOnly.TryParse(travellerSearchRequest.Dob_from, out DateOnly dobFromDate))
+                {
+                    predicate = predicate.And(t => t.Dob >= dobFromDate);
+                }
+                else
+                {
+                    return new TravellerSearchResponse
+                    {
+                        ErrorCode = ErrorEnum.BadRequest,
+                        Messsage = " Bad Date Format on Dob_From"
+                    };
+                }
+            }
+
+            if (!string.IsNullOrEmpty(travellerSearchRequest.Dob_to))
+            {
+                if (DateOnly.TryParse(travellerSearchRequest.Dob_to, out DateOnly dobToDate))
+                {
+                    predicate = predicate.And(t => t.Dob <= dobToDate);
+                }
+                else
+                {
+                    return new TravellerSearchResponse
+                    {
+                        ErrorCode = ErrorEnum.BadRequest,
+                        Messsage =" Bad Date Format on Dob_to"
+                    };
+                }
+            }
+
+            List<Traveller> travellers;
+            try
+            {
+                 travellers = await _travellerRepository.SearchEntityAsync(predicate);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(" Issue retrieving data from DB {@e}", e);
+                return new TravellerSearchResponse { ErrorCode = ErrorEnum.InternalServerError, Messsage="Error getting data from DB" };
+            }
+
+            return new TravellerSearchResponse
+            {
+                ErrorCode = ErrorEnum.None,
+                Travellers = travellers.Select(t => t.Adapt<TravellerDTO>()).ToList()
+            };
+
         }
 
     }

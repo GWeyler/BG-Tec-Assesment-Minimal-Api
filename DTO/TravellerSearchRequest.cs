@@ -2,7 +2,7 @@
 
 namespace BG_Tec_Assesment_Minimal_Api.DTO
 {
-    public class TravellerQueryRequest
+    public class TravellerSearchRequest
     {
         public int? FlightId { get; set; }
         public string? Name { get; set; }
