@@ -1,4 +1,4 @@
 <Solution>
-  <Project Path="../BG-Tec-Assesment-Minimal-Api.Test/BG-Tec-Assesment-Minimal-Api.Test.csproj" Id="7ec7f77a-97fe-475b-8d18-b19cbfdbb012" />
+  <Project Path="../BG-Tec-Assesment-Minimal-Api.Test/BG-Tec-Assesment-Minimal-Api.Test.csproj" />
   <Project Path="BG-Tec-Assesment-Minimal-Api.csproj" />
 </Solution>
