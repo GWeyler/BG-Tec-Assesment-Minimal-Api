@@ -9,6 +9,6 @@ namespace BG_Tec_Assesment_Minimal_Api.DTO
 
         public List<TravellerDTO> Travellers { get; set; } = new List<TravellerDTO>();
 
-        public string? Messsage { get; set; }
+        public string? Message { get; set; }
     }
 }

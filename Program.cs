@@ -1,17 +1,18 @@
-using Serilog;
-using Mapster;
 using BG_Tec_Assesment_Minimal_Api.Data;
-using Microsoft.EntityFrameworkCore;
 using BG_Tec_Assesment_Minimal_Api.DTO;
-using Microsoft.AspNetCore.Mvc;
+using BG_Tec_Assesment_Minimal_Api.Models;
 using BG_Tec_Assesment_Minimal_Api.Services;
 using BG_Tec_Assesment_Minimal_Api.Utils;
-using System.Reflection.Metadata.Ecma335;
+using Mapster;
 using Microsoft.AspNetCore.Http.HttpResults;
-using System.Data.Entity.Core.Mapping;
-using BG_Tec_Assesment_Minimal_Api.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using System.Data.Entity.Core.Mapping;
+using System.Net.NetworkInformation;
+using System.Reflection.Metadata.Ecma335;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -51,17 +52,26 @@ app.MapPost("/check-in", async ([FromBody] CheckInRequest request, ITravellerSer
     switch (ret.ErrorCode)
     {
         case ErrorEnum.None:
-            return Results.Ok(new { status = ret.Message, travellerId = ret.TravellerId });
+            return Results.Ok(new { ret.Value });
         case ErrorEnum.NotFound:
             return Results.NotFound(new { status = ret.Message });
         case ErrorEnum.InternalServerError:
-            return Results.InternalServerError(new {error = ret.Message, CorrelationId = context.TraceIdentifier});
+            return Results.Problem(
+                type: "Internal Server Error",
+                statusCode: StatusCodes.Status500InternalServerError,
+                detail: ret.Message);
         case ErrorEnum.BadRequest:
-            return Results.BadRequest(new { status = ret.Message });
+            return Results.Problem(
+                 type: "Bad Request",
+                 statusCode: StatusCodes.Status400BadRequest,
+                 detail: ret.Message);
         case ErrorEnum.DuplicateEntry:
-            return Results.BadRequest(new { status = "Duplicate", reason = ret.Message });
+            return Results.Ok(new { status = ret.Value.Status, reason = ret.Message });
         default:
-            return Results.InternalServerError(new { CorrelationId = context.TraceIdentifier });
+            return Results.Problem(
+                type: "Internal Server Error",
+                statusCode: StatusCodes.Status500InternalServerError,
+                detail: ret.Message == null ? "Unkown": ret.Message);
     }
 }
 );
@@ -73,14 +83,15 @@ app.MapGet("/traveller/{id}", async (int id, ITravellerService travellerService,
     switch (ret.ErrorCode)
     {
         case ErrorEnum.None:
-            return Results.Ok(ret.Traveller);
+            return Results.Ok(ret.Value);
         case ErrorEnum.NotFound:
             return Results.NotFound(new {status="No Traverller found"});
         default:
-            return Results.InternalServerError(new { message="Internal Server Error", CorrelationId = context.TraceIdentifier });
-        
+            return Results.Problem(
+                type: "Internal Server Error",
+                statusCode: StatusCodes.Status500InternalServerError,
+                detail: ret.Message );
     }
-
 });
 
 app.MapGet("/traveller/search", async  (
@@ -105,11 +116,17 @@ app.MapGet("/traveller/search", async  (
     switch (ret.ErrorCode)
     {
         case ErrorEnum.None:
-            return Results.Ok(new { result = ret.Travellers});
+            return Results.Ok(new { result = ret.Value});
         case ErrorEnum.BadRequest:
-            return Results.BadRequest(ret.Messsage);
+            return Results.Problem(
+                type: "Bad Request",
+                statusCode: StatusCodes.Status400BadRequest,
+                detail: ret.Message);
         default:
-            return Results.InternalServerError(new { message = "Internal Server Error", CorrelationId = context.TraceIdentifier });
+            return Results.Problem(
+                type: "Internal Server Error",
+                statusCode: StatusCodes.Status500InternalServerError,
+                detail: ret.Message);
     }
 }
 );
