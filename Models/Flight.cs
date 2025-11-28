@@ -9,5 +9,8 @@ namespace BG_Tec_Assesment_Minimal_Api.Models
 
         //Other flight details that are not used in the assessment should be included here
         public List<Traveller> Travellers { get; set; }
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
     }
 }

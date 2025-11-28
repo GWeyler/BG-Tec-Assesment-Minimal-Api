@@ -4,6 +4,7 @@ using BG_Tec_Assesment_Minimal_Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BG_Tec_Assesment_Minimal_Api.Migrations
 {
     [DbContext(typeof(TravellerAPIDbContext))]
-    partial class TravellerAPIDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251128153905_Add concurrency Token")]
+    partial class AddconcurrencyToken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
