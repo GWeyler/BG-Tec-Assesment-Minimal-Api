@@ -34,6 +34,16 @@ builder.Services.AddScoped(typeof(IGenericRepository<Traveller>), typeof(Travell
 
 builder.Services.AddScoped(typeof(IGenericRepository<Flight>), typeof(FlightRepository));
 
+builder.Services.AddProblemDetails(options =>
+
+        options.CustomizeProblemDetails = ctx =>
+        {
+            ctx.ProblemDetails.Instance = $"{ctx.HttpContext.Request.Method} {ctx.HttpContext.Request.Path}";
+            ctx.ProblemDetails.Extensions["traceId"] = ctx.HttpContext.TraceIdentifier;
+        }
+
+);
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -45,7 +55,7 @@ app.UseMiddleware<RequestLogContextMiddleware>();
 
 app.UseSerilogRequestLogging();
 
-app.MapPost("/check-in", async ([FromBody] CheckInRequest request, ITravellerService travellerService, HttpContext context) =>
+app.MapPost("/check-in", async ([FromBody] CheckInRequest request, ITravellerService travellerService) =>
 {
     
     var ret = await travellerService.CheckInTravellerAsync(request);
@@ -76,7 +86,7 @@ app.MapPost("/check-in", async ([FromBody] CheckInRequest request, ITravellerSer
 }
 );
 
-app.MapGet("/traveller/{id}", async (int id, ITravellerService travellerService, HttpContext context) =>
+app.MapGet("/traveller/{id}", async (int id, ITravellerService travellerService) =>
 {
     var ret = await travellerService.GetTravellerByIdAsync(id);
 
@@ -99,8 +109,7 @@ app.MapGet("/traveller/search", async  (
     [FromQuery] string? name,
     [FromQuery(Name = "dob-to")] string? dobTo,
     [FromQuery(Name = "dob-from")] string? dobFrom,
-    ITravellerService travellerService,
-    HttpContext context
+    ITravellerService travellerService
 ) =>
 {
     var request = new TravellerSearchRequest
