@@ -102,17 +102,17 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
 
             if (existingTraveller != null)
             {
-                _logger.LogDebug("Existing traveller found {@existingTraveller}", existingTraveller);
+                _logger.LogDebug("Existing traveller found {@existingTravellerId}", existingTraveller.Id);
                 if (flight.Travellers.Contains(existingTraveller))
                 {
-                    _logger.LogWarning("Traveller already checked in for this flight: {@existingTraveller}", existingTraveller);
+                    _logger.LogWarning("Traveller already checked in for this flight: {@existingTravellerId}", existingTraveller.Id);
                     return new RequestResult<CheckinResponseDTO> { ErrorCode = ErrorEnum.DuplicateEntry, Message = "Document already used for this flight.", Value = new CheckinResponseDTO {Status = "Duplicate"} };
                 }
                 else
                 {
                     if (!existingTraveller.SoftEquals(newTraveller))
                     {
-                        _logger.LogWarning("Existing traveller does not match new traveller details {@existingTraveller} {@newTraveller}", existingTraveller, newTraveller);
+                        _logger.LogWarning("Existing traveller does not match new traveller details for existing traveller {@existingTraveller}", existingTraveller.Id);
                         return new RequestResult<CheckinResponseDTO> { ErrorCode = ErrorEnum.BadRequest, Message = "Document matches existing traveller but details do not match." };
                     }
 
@@ -133,15 +133,15 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
 
             try
             {
-                _logger.LogInformation("Adding new traveller {@t} to db and flight {fid}", newTraveller,flight.Id);
                 var ret = await _travellerRepository.AddEntityAsync(newTraveller);
                 flight.Travellers.Add(ret);
                 await _flightRepository.SaveChangesAsync();
+                _logger.LogInformation("Add new traveller with id {@t.id} to db and flight {fid}", newTraveller.Id, flight.Id);
                 return new RequestResult<CheckinResponseDTO> { ErrorCode = ErrorEnum.None, Value = new CheckinResponseDTO { TravellerId = ret.Id, Status = "Accepted" } };
             }
             catch (Exception e)
             {
-                _logger.LogError("Error saving new traveller: {@t} {@e}",newTraveller, e);
+                _logger.LogError("Error saving new traveller {@e}", e);
                 return new RequestResult<CheckinResponseDTO> { ErrorCode = ErrorEnum.InternalServerError, Message = e.Message };
 
             }
