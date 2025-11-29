@@ -1,7 +1,7 @@
-﻿@BG-Tec-HostAddress = https://localhost:7024
+﻿@BGTecHostAddress=https://localhost:8080
 
 ###
-POST https://localhost:7024/check-in
+POST {{BGTecHostAddress}}/check-in
 Accept: application/json
 Content-Type: application/json
  {
@@ -12,12 +12,12 @@ Content-Type: application/json
   "flightId": 1552
  }
 
- ###
+###
 @id=1
-GET https://localhost:7024/traveller/{{id}}
+GET {{BGTecHostAddress}}/traveller/{{id}}
 
 ###
 
-GET https://localhost:7024/traveller/search?name=j
+GET {{BGTecHostAddress}}/traveller/search?name=j
 
 ###
