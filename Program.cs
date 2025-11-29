@@ -55,6 +55,33 @@ app.UseMiddleware<RequestLogContextMiddleware>();
 
 app.UseSerilogRequestLogging();
 
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+logger.LogInformation("Application startup initiated.");
+
+
+//This is here to make it easier to run the docker compose without having to manually run migrations
+if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Production)
+{
+    logger.LogInformation("Running in Production environment. Checking for pending migrations...");
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<TravellerAPIDbContext>();
+
+        // Check and apply pending migrations
+        var pendingMigrations = dbContext.Database.GetPendingMigrations();
+        if (pendingMigrations.Any())
+        {
+            logger.LogInformation("Applying pending migrations...");
+            dbContext.Database.Migrate();
+        }
+        else
+        {
+            logger.LogInformation("No pending migrations found.");
+        }
+    }
+
+}
+
 app.MapPost("/check-in", async ([FromBody] CheckInRequest request, ITravellerService travellerService) =>
 {
     

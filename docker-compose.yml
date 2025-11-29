@@ -20,7 +20,7 @@ services:
       - mssql-server # Ensures mssql-server starts before dotnet-app
 
     environment:
-      - ASPNETCORE_ENVIRONMENT=Release
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_HTTPS_PORTS=7979
       - ASPNETCORE_Kestrel__Certificates__Default__Password=passthing111
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
