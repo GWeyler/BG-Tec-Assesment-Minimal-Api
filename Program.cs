@@ -103,7 +103,7 @@ app.MapPost("/check-in", async ([FromBody] CheckInRequest request, ITravellerSer
                  statusCode: StatusCodes.Status400BadRequest,
                  detail: ret.Message);
         case ErrorEnum.DuplicateEntry:
-            return Results.Ok(new { status = ret.Value.Status, reason = ret.Message });
+            return Results.Ok(new { status = ret.Value?.Status, reason = ret.Message });
         default:
             return Results.Problem(
                 type: "Internal Server Error",

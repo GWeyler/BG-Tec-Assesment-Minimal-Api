@@ -8,13 +8,13 @@ namespace BG_Tec_Assesment_Minimal_Api.DTO
     {
         public int Id { get; set; }
     
-        public string Forename { get; set; }
+        public required string Forename { get; set; }
 
-        public string Surname { get; set; }
+        public required string  Surname { get; set; }
 
         public DateOnly Dob { get; set; }
 
-        public List<FlightDTO> Flights { get; set; }
+        public List<FlightDTO> Flights { get; set; } = new List<FlightDTO>();
 
         public DateTime CreatedAt { get; set; }
     }

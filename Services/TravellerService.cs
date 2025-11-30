@@ -46,7 +46,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
 
             }catch (Exception e)
             {
-                _logger.LogError("Issue retrieving data from DB {@e}", e);
+                _logger.LogError("Issue retrieving data from DB {@e}", e.ToString());
                 return new RequestResult<CheckinResponseDTO> { ErrorCode = ErrorEnum.InternalServerError, Message = e.Message };
             }
 
@@ -96,7 +96,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
 
             } catch (Exception e)
             {
-                _logger.LogError(" Issue retrieving data from DB {@e}", e);
+                _logger.LogError("Issue retrieving data from DB {@e}", e.ToString());
                 return new RequestResult<CheckinResponseDTO> { ErrorCode = ErrorEnum.InternalServerError, Message = e.Message };
             }
 
@@ -125,7 +125,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
                     }
                     catch (Exception e)
                     {
-                         _logger.LogError("Exception Existing Traveller to flight {e}",e);
+                         _logger.LogError("Exception Existing Traveller to flight {@e}",e.ToString());
                         return new RequestResult<CheckinResponseDTO> { ErrorCode = ErrorEnum.InternalServerError, Message = e.Message };
                     }
                 }
@@ -141,7 +141,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
             }
             catch (Exception e)
             {
-                _logger.LogError("Error saving new traveller {@e}", e);
+                _logger.LogError("Error saving new traveller {@e}", e.ToString());
                 return new RequestResult<CheckinResponseDTO> { ErrorCode = ErrorEnum.InternalServerError, Message = e.Message };
 
             }
@@ -157,7 +157,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
             }
             catch (Exception e)
             {
-                _logger.LogError("Issue retrieving data from DB {@e}", e);
+                _logger.LogError("Issue retrieving data from DB {@e}", e.ToString());
                 return new RequestResult<TravellerDTO> { ErrorCode = ErrorEnum.InternalServerError, Value = null ,Message = e.Message};
             }
 
@@ -223,7 +223,7 @@ namespace BG_Tec_Assesment_Minimal_Api.Services
             }
             catch (Exception e)
             {
-                _logger.LogError("Issue retrieving data from DB {@e}", e);
+                _logger.LogError("Issue retrieving data from DB {@e}", e.ToString());
                 return new RequestResult<List<TravellerDTO>> { ErrorCode = ErrorEnum.InternalServerError, Message = e.Message };
             }
 
